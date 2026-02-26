@@ -1,161 +1,193 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>AppHub – Vos Apps</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/png" href="https://www.dropbox.com/scl/fi/udvygiv463rwfdjcf9q9m/apphub.png?rlkey=tzfqv7nur15y3fjezvap2x07h&st=wkkmu99f&dl=1">
-<style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #0b1520;
-    color: white;
-}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>APPEVENT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --abyss: #020205; --magenta: #D62F7F; --void: #0B0C15; }
+        
+        body, html { 
+            background: var(--abyss); 
+            color: #fff; 
+            margin: 0; 
+            font-family: 'Montserrat', sans-serif; 
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 40px;
-    background: #0e1a2a;
-}
+        /* Custom Cursor */
+        #custom-cursor { 
+            width: 30px; height: 30px; border: 1px solid var(--magenta); 
+            position: fixed; pointer-events: none; z-index: 10000; border-radius: 50%; 
+            transition: transform 0.1s ease-out; transform: translate(-50%, -50%); 
+            box-shadow: 0 0 15px var(--magenta); display: none;
+        }
+        @media (min-width: 1024px) { body, html, * { cursor: none !important; } #custom-cursor { display: block; } }
 
-header h1 {
-    margin: 0;
-    color: #00c6ff;
-}
+        /* Background Effects */
+        .scanline { width: 100%; height: 100px; z-index: 40; pointer-events: none; background: linear-gradient(0deg, rgba(214, 47, 127, 0) 0%, rgba(214, 47, 127, 0.05) 50%, rgba(214, 47, 127, 0) 100%); position: fixed; top: -100px; animation: scan 6s linear infinite; }
+        @keyframes scan { 0% { top: -100px; } 100% { top: 100%; } }
 
-header button {
-    background: #00c6ff;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-}
+        /* Card Styling */
+        .app-card {
+            background: rgba(214, 47, 127, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        .app-card:hover {
+            border-color: var(--magenta);
+            background: rgba(214, 47, 127, 0.1);
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(214, 47, 127, 0.2);
+        }
+        .app-card img {
+            filter: drop-shadow(0 0 10px rgba(214, 47, 127, 0.5));
+        }
 
-h2 {
-    text-align: center;
-    margin-top: 40px;
-    color: #00c6ff;
-}
+        .logout-btn {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-family: 'Share Tech Mono', monospace;
+            transition: 0.3s;
+        }
+        .logout-btn:hover {
+            border-color: var(--magenta);
+            color: var(--magenta);
+            box-shadow: 0 0 15px var(--magenta);
+        }
 
-.apps-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 30px;
-    padding: 40px;
-    max-width: 1200px;
-    margin: auto;
-}
-
-.app-card {
-    background: #111f2f;
-    border-radius: 18px;
-    padding: 25px;
-    text-align: center;
-    cursor: pointer;
-    transition: 0.2s;
-    border: 2px solid transparent;
-}
-
-.app-card:hover {
-    transform: translateY(-5px);
-    border-color: #00c6ff;
-    box-shadow: 0 0 15px rgba(0,198,255,0.6);
-}
-
-.app-card img {
-    width: 90px;
-    height: 90px;
-    object-fit: contain;
-    margin-bottom: 15px;
-}
-
-.add-app {
-    background: rgba(0,198,255,0.08);
-    border: 2px dashed #00c6ff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-}
-
-.add-app:hover {
-    background: rgba(0,198,255,0.2);
-}
-</style>
+        .hud-corner { position: absolute; width: 10px; height: 10px; border: 1px solid var(--magenta); opacity: 0.5; }
+    </style>
 </head>
 <body>
 
-<header>
-    <h1>AppHub</h1>
-    <button id="logout">LOGOUT</button>
-</header>
+    <div id="custom-cursor"></div>
+    <canvas id="starCanvas" class="fixed inset-0 z-0"></canvas>
+    <div class="scanline"></div>
 
-<h2>Vos Apps</h2>
+    <nav class="relative z-50 border-b border-white/10 bg-black/50 backdrop-blur-md px-8 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 border border-magenta rotate-45 flex items-center justify-center overflow-hidden">
+                <img src="apphub.png" alt="Logo" class="rotate-[-45deg] w-6 h-6 object-contain">
+            </div>
+            <h1 class="font-rajdhani font-bold text-2xl tracking-tighter uppercase">App<span class="text-magenta">Event</span></h1>
+        </div>
+        <button id="logout" class="logout-btn px-6 py-2 text-xs tracking-widest uppercase">Terminate_Session [X]</button>
+    </nav>
 
-<div class="apps-container" id="apps-container">
-</div>
+    <main class="relative z-10 p-10 max-w-7xl mx-auto">
+        <header class="mb-12">
+            <p class="font-mono text-magenta text-[10px] tracking-[0.5em] uppercase mb-2">System_Authorized // Access_Level_01</p>
+            <h2 class="font-rajdhani text-4xl font-bold uppercase tracking-tight">Main_Control_Deck</h2>
+            <div class="h-1 w-20 bg-magenta mt-4"></div>
+        </header>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" id="apps-container">
+            </div>
+    </main>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDSekwBtU3u3DquxJIm9N7urL1_8zdrm34",
-  authDomain: "apphub-94be4.firebaseapp.com",
-  projectId: "apphub-94be4",
-  storageBucket: "apphub-94be4.firebasestorage.app",
-  messagingSenderId: "86249833874",
-  appId: "1:86249833874:web:d83466be51eaf27a4a2d4b",
-  measurementId: "G-B16MB4RCTQ"
-};
+    <div class="fixed bottom-0 w-full bg-black/80 border-t border-white/5 px-8 py-2 flex justify-between font-mono text-[8px] uppercase tracking-[0.3em] opacity-50 z-50">
+        <div>Node: Suresnes_FR</div>
+        <div>Uptime: <span id="uptime">0h 0m 0s</span></div>
+        <div id="live-clock">00:00:00</div>
+    </div>
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-const container = document.getElementById("apps-container");
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSekwBtU3u3DquxJIm9N7urL1_8zdrm34",
+            authDomain: "apphub-94be4.firebaseapp.com",
+            projectId: "apphub-94be4",
+            storageBucket: "apphub-94be4.firebasestorage.app",
+            messagingSenderId: "86249833874",
+            appId: "1:86249833874:web:d83466be51eaf27a4a2d4b"
+        };
 
-// Protection page
-onAuthStateChanged(auth, (user) => {
-    if (!user) window.location.href = "index.html";
-});
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-// Logout
-document.getElementById("logout").addEventListener("click", () => {
-    signOut(auth).then(() => window.location.href = "index.html");
-});
+        // Protection & Redirection
+        onAuthStateChanged(auth, (user) => {
+            if (!user) window.location.href = "index.html";
+        });
 
-// Charger apps depuis Firestore
-async function loadApps() {
-    container.innerHTML = "";
+        // Logout
+        document.getElementById("logout").addEventListener("click", () => {
+            signOut(auth).then(() => window.location.href = "index.html");
+        });
 
-    const querySnapshot = await getDocs(collection(db, "apps"));
-    querySnapshot.forEach((doc) => {
-        const data = doc.data();
+        // Charger les applications
+        async function loadApps() {
+            const container = document.getElementById("apps-container");
+            container.innerHTML = "";
 
-        const card = document.createElement("div");
-        card.className = "app-card";
-        card.innerHTML = `
-            <img src="${data.image}" alt="${data.name}">
-            <h3>${data.name}</h3>
-        `;
+            try {
+                const querySnapshot = await getDocs(collection(db, "apps"));
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const pageName = data.name.toLowerCase().replace(/\s+/g, '') + ".html";
 
-        // Générer automatiquement le lien vers /apps/<nom>.html
-        const pageName = data.name.toLowerCase().replace(/\s+/g, '') + ".html";
-        card.onclick = () => window.location.href = `/apphub/apps/${pageName}`;
+                    const card = document.createElement("div");
+                    card.className = "app-card p-8 flex flex-col items-center justify-center text-center group cursor-pointer";
+                    card.innerHTML = `
+                        <div class="hud-corner top-0 left-0 border-r-0 border-b-0"></div>
+                        <div class="hud-corner bottom-0 right-0 border-l-0 border-t-0"></div>
+                        <img src="${data.image}" alt="${data.name}" class="w-20 h-20 object-contain mb-6">
+                        <h3 class="font-rajdhani font-bold text-xl tracking-wider uppercase group-hover:text-magenta transition-colors">${data.name}</h3>
+                        <p class="font-mono text-[9px] text-gray-500 mt-2 uppercase tracking-tighter">Execute_Process_044</p>
+                    `;
 
-        container.appendChild(card);
-    });
-}
+                    card.onclick = () => window.location.href = `/apps/${pageName}`;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error("Error loading apps:", error);
+            }
+        }
 
-loadApps();
-</script>
+        loadApps();
+    </script>
 
+    <script>
+        // Star Background Logic
+        const canvas = document.getElementById('starCanvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        function initStars() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            stars = [];
+            for(let i=0; i<100; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, s:Math.random()*1.5, op:Math.random(), sp:Math.random()*0.01});
+        }
+        function animateStars() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            stars.forEach(s => { s.op += s.sp; if(s.op > 1 || s.op < 0) s.sp *= -1; ctx.fillStyle = `rgba(214, 47, 127, ${s.op})`; ctx.fillRect(s.x, s.y, s.s, s.s); });
+            requestAnimationFrame(animateStars);
+        }
+        window.addEventListener('resize', initStars);
+        initStars(); animateStars();
+
+        // Cursor, Clock & Uptime
+        const cursor = document.getElementById('custom-cursor');
+        window.addEventListener('mousemove', e => { cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px'; });
+        
+        let startTime = Date.now();
+        setInterval(() => { 
+            document.getElementById('live-clock').innerText = new Date().toLocaleTimeString();
+            let diff = Math.floor((Date.now() - startTime) / 1000);
+            let h = Math.floor(diff / 3600);
+            let m = Math.floor((diff % 3600) / 60);
+            let s = diff % 60;
+            document.getElementById('uptime').innerText = `${h}h ${m}m ${s}s`;
+        }, 1000);
+    </script>
 </body>
 </html>
-

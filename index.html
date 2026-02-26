@@ -2,118 +2,284 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8" />
-    <title>AppHub – Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/png" href="https://www.dropbox.com/scl/fi/udvygiv463rwfdjcf9q9m/apphub.png?rlkey=tzfqv7nur15y3fjezvap2x07h&st=wkkmu99f&dl=1">
+    <title>APPEVENT | Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --abyss: #020205; --magenta: #D62F7F; --void: #0B0C15; }
+        
+        body, html { 
+            background: var(--abyss); 
+            color: #fff; 
+            margin: 0; 
+            font-family: 'Montserrat', sans-serif; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        #error-display {
+    display: none;
+    background: rgba(255, 0, 60, 0.1);
+    border: 1px solid #ff003c;
+    color: #ff003c;
+    padding: 15px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 15px rgba(255, 0, 60, 0.2);
+    position: relative;
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+    0%, 100% { border-color: #ff003c; box-shadow: 0 0 15px rgba(255, 0, 60, 0.2); }
+    50% { border-color: #ff6085; box-shadow: 0 0 25px rgba(255, 0, 60, 0.4); }
+}
+
+        /* Custom Cursor */
+        #custom-cursor { 
+            width: 30px; height: 30px; border: 1px solid var(--magenta); 
+            position: fixed; pointer-events: none; z-index: 10000; border-radius: 50%; 
+            transition: transform 0.1s ease-out; transform: translate(-50%, -50%); 
+            box-shadow: 0 0 15px var(--magenta); display: none;
+        }
+        @media (min-width: 1024px) { body, html, * { cursor: none !important; } #custom-cursor { display: block; } }
+
+        /* Effects */
+        .scanline { width: 100%; height: 100px; z-index: 40; pointer-events: none; background: linear-gradient(0deg, rgba(214, 47, 127, 0) 0%, rgba(214, 47, 127, 0.05) 50%, rgba(214, 47, 127, 0) 100%); position: absolute; top: -100px; animation: scan 6s linear infinite; }
+        @keyframes scan { 0% { top: -100px; } 100% { top: 100%; } }
+        
+        .glitch { animation: glitch 1s linear infinite; }
+        @keyframes glitch { 2%, 64% { transform: translate(2px, 0); } 4%, 60% { transform: translate(-2px, 0); } }
+
+        .hud-corner { position: absolute; width: 15px; height: 15px; border: 1px solid var(--magenta); opacity: 0.5; }
+        
+        /* Form Styling */
+        input {
+            background: rgba(214, 47, 127, 0.05) !important;
+            border: 1px solid rgba(214, 47, 127, 0.2) !important;
+            color: white !important;
+            transition: 0.3s;
+        }
+        input:focus {
+            border-color: var(--magenta) !important;
+            box-shadow: 0 0 15px rgba(214, 47, 127, 0.2);
+            outline: none;
+        }
+        .login-btn {
+            background: transparent;
+            border: 1px solid var(--magenta);
+            color: var(--magenta);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            transition: 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-btn:hover {
+            background: var(--magenta);
+            color: white;
+            box-shadow: 0 0 20px var(--magenta);
+        }
+    </style>
 </head>
 <body>
 
-    <div class="login-container">
-        <div class="logo">
-            <div class="logo-icon">A</div>
+    <div id="custom-cursor"></div>
+    <canvas id="starCanvas" class="fixed inset-0 z-0"></canvas>
+    <div class="scanline"></div>
+
+    <div id="bios-boot" class="fixed inset-0 bg-black z-[10000] p-8 font-mono text-magenta text-xs overflow-hidden pointer-events-none">
+        <div id="boot-text"></div>
+        <span class="inline-block w-2 h-4 bg-magenta animate-pulse mt-2"></span>
+    </div>
+
+    <div id="main-ui" class="relative z-10 opacity-0 transition-opacity duration-[1500ms] flex items-center justify-center min-h-screen p-6">
+        
+        <div class="max-w-md w-full bg-black/40 backdrop-blur-xl border border-white/10 p-10 relative">
+            <div class="hud-corner top-0 left-0 border-r-0 border-b-0"></div>
+            <div class="hud-corner top-0 right-0 border-l-0 border-b-0"></div>
+            <div class="hud-corner bottom-0 left-0 border-r-0 border-t-0"></div>
+            <div class="hud-corner bottom-0 right-0 border-l-0 border-t-0"></div>
+
+            <div class="text-center mb-8">
+                <div class="inline-block w-12 h-12 border border-magenta rotate-45 flex items-center justify-center mb-4 mx-auto overflow-hidden">
+                    <img src="apphub.png" alt="Logo" class="rotate-[-45deg] w-8 h-8 object-contain">
+                </div>
+                <h1 class="glitch text-5xl font-rajdhani font-bold tracking-tighter uppercase">App<span class="text-magenta">Event</span></h1>
+                <p class="text-[10px] font-mono tracking-[0.4em] text-gray-500 mt-2 uppercase">Secure_Uplink_Authorized</p>
+            </div>
+
+            <div id="error-display">
+                <span id="error-message">CRITICAL_ERROR: Access_Denied</span>
+            </div>
+            <form class="space-y-4">
+                <div class="form-group">
+                    <input id="email" type="email" placeholder="ACCESS_ID (EMAIL)" required class="w-full px-4 py-3 font-mono text-xs" />
+                </div>
+                <div class="form-group">
+                    <input id="password" type="password" placeholder="SECURITY_KEY" required class="w-full px-4 py-3 font-mono text-xs" />
+                </div>
+                <button class="login-btn w-full py-4 font-bold text-sm mt-4" type="submit">Initialize_Session</button>
+            </form>
+
+            <div class="flex items-center gap-4 my-8">
+                <div class="h-[1px] bg-white/10 flex-1"></div>
+                <span class="text-[9px] font-mono text-gray-600">OR_SOCIAL_LINK</span>
+                <div class="h-[1px] bg-white/10 flex-1"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <button type="button" id="googleBtn" class="flex items-center justify-center border border-white/10 py-3 hover:bg-white/5 transition-all">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/3840px-Google_%22G%22_logo.svg.png" alt="Google" class="w-5 h-5 opacity-80">
+                </button>
+                <button type="button" id="microsoftBtn" class="flex items-center justify-center border border-white/10 py-3 hover:bg-white/5 transition-all">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft" class="w-5 h-5 opacity-80">
+                </button>
+            </div>
+
+            <div class="mt-8 text-center">
+                <a href="register.html" class="text-[10px] font-mono text-magenta/60 hover:text-magenta transition-all tracking-widest uppercase italic underline decoration-magenta/20">
+                    New_User? Create_Account >>
+                </a>
+            </div>
         </div>
 
-        <h1>AppHub</h1>
-        <p class="subtitle">Secure Account Access</p>
-
-        <form>
-            <div class="form-group">
-                <input 
-                    id="email"
-                    type="email"
-                    placeholder="Email"
-                    required
-                />
-            </div>
-
-            <div class="form-group">
-                <input 
-                    id="password"
-                    type="password"
-                    placeholder="Password"
-                    required
-                />
-            </div>
-
-            <button class="login-btn" type="submit">
-                Login
-            </button>
-        </form>
-        <div class="social-login">
-    <button type="button" id="googleBtn">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/3840px-Google_%22G%22_logo.svg.png" alt="Google" width="24" height="24">
-    </button>
-    <button type="button" id="microsoftBtn">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft" width="24" height="24">
-    </button>
-</div>
-
-
-        <div class="footer-link">
-            <a href="register.html">Create an account?</a>
+        <div class="fixed bottom-6 w-full flex justify-between px-10 pointer-events-none opacity-40 font-mono text-[8px] uppercase tracking-[0.3em]">
+            <div>Status: <span class="text-green-500">Waiting_Input</span></div>
+            <div>Auth_Node: AppHub_v4.0</div>
+            <div id="live-clock">00:00:00</div>
         </div>
     </div>
+
     <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { 
-  getAuth, 
-  signInWithEmailAndPassword,
-  GoogleAuthProvider, 
-  OAuthProvider,
-  signInWithPopup,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { 
+        getAuth, signInWithEmailAndPassword, GoogleAuthProvider, OAuthProvider, 
+        signInWithPopup, onAuthStateChanged, signOut // Ajout de signOut ici
+    } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDSekwBtU3u3DquxJIm9N7urL1_8zdrm34",
-  authDomain: "apphub-94be4.firebaseapp.com",
-  projectId: "apphub-94be4",
-  storageBucket: "apphub-94be4.firebasestorage.app",
-  messagingSenderId: "86249833874",
-  appId: "1:86249833874:web:d83466be51eaf27a4a2d4b",
-  measurementId: "G-B16MB4RCTQ"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+    const firebaseConfig = {
+        apiKey: "AIzaSyDSekwBtU3u3DquxJIm9N7urL1_8zdrm34",
+        authDomain: "apphub-94be4.firebaseapp.com",
+        projectId: "apphub-94be4",
+        storageBucket: "apphub-94be4.firebasestorage.app",
+        messagingSenderId: "86249833874",
+        appId: "1:86249833874:web:d83466be51eaf27a4a2d4b"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-// Auto-redirect si déjà connecté
-onAuthStateChanged(auth, (user) => {
-  if (user) window.location.href = "dashboard.html";
-});
+    const errorDisplay = document.getElementById('error-display');
+    const errorMessage = document.getElementById('error-message');
+    const form = document.querySelector("form"); // Définition du formulaire
 
-// Login email/password
-const form = document.querySelector("form");
-form.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const email = document.querySelector("#email").value;
-  const password = document.querySelector("#password").value;
+    // --- SYSTÈME DE NOTIFICATION HUD ---
+    const showError = (text) => {
+        errorMessage.textContent = `> ${text}`;
+        errorDisplay.style.display = 'block';
+        
+        // Effet de secousse sur le container
+        const box = document.querySelector('.max-w-md');
+        box.style.animation = 'none';
+        box.offsetHeight; // Trigger reflow
+        box.style.animation = 'glitch 0.3s linear';
+    };
 
-  signInWithEmailAndPassword(auth, email, password)
-    .then(() => window.location.href = "dashboard.html")
-    .catch(() => alert("Email ou mot de passe incorrect ❌"));
-});
+    // --- VÉRIFICATION DE L'ACCÈS ---
+    const checkVerification = (user) => {
+        if (user) {
+            if (user.emailVerified) {
+                window.location.href = "dashboard.html";
+            } else {
+                showError("EMAIL_NOT_VERIFIED: Validation_Link_Required");
+                signOut(auth); // On rejette la session si non validé
+            }
+        }
+    };
 
-// 🔥 Social login
-const googleProvider = new GoogleAuthProvider();
-const appleProvider = new OAuthProvider('apple.com');
-const microsoftProvider = new OAuthProvider('microsoft.com');
+    // Surveillance de l'état (Auto-login seulement si vérifié)
+    onAuthStateChanged(auth, (user) => { 
+        if (user && user.emailVerified) window.location.href = "dashboard.html"; 
+    });
 
-document.getElementById("googleBtn").addEventListener("click", () => {
-  signInWithPopup(auth, googleProvider)
-    .then(() => window.location.href = "dashboard.html")
-    .catch(err => alert(err.message));
-});
+    // --- LOGIN CLASSIQUE ---
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        errorDisplay.style.display = 'none'; 
+        
+        const email = document.querySelector("#email").value;
+        const password = document.querySelector("#password").value;
+        
+        signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                checkVerification(userCredential.user);
+            })
+            .catch((error) => {
+                showError("AUTH_FAILED: Access_Denied_❌");
+            });
+    });
 
-document.getElementById("microsoftBtn").addEventListener("click", () => {
-  signInWithPopup(auth, microsoftProvider)
-    .then(() => window.location.href = "dashboard.html")
-    .catch(err => alert(err.message));
-});
+    // --- LOGIN SOCIAL ---
+    const googleProvider = new GoogleAuthProvider();
+    const microsoftProvider = new OAuthProvider('microsoft.com');
 
+    document.getElementById("googleBtn").addEventListener("click", () => {
+        signInWithPopup(auth, googleProvider)
+            .then((result) => checkVerification(result.user))
+            .catch(() => showError("SOCIAL_LINK_ERROR"));
+    });
+
+    document.getElementById("microsoftBtn").addEventListener("click", () => {
+        signInWithPopup(auth, microsoftProvider)
+            .then((result) => checkVerification(result.user))
+            .catch(() => showError("SOCIAL_LINK_ERROR"));
+    });
 </script>
 
-</body>
-<script src="script.js"></script>
-</html>
+    <script>
+        // Animations & Visuals
+        const bootMessages = ["> INITIALIZING APPHUB_OS...", "> DECRYPTING PROTOCOLS...", "> LOADING SECURITY_MODULES...", "> SYNCING CLOUD_DATABASE...", "> ACCESS_GRANTED."];
+        let line = 0;
+        function runBios() {
+            const container = document.getElementById('boot-text');
+            if (line < bootMessages.length) {
+                let p = document.createElement('p'); p.textContent = bootMessages[line];
+                container.appendChild(p); line++;
+                setTimeout(runBios, 100);
+            } else {
+                setTimeout(() => {
+                    document.getElementById('bios-boot').style.opacity = '0';
+                    document.getElementById('main-ui').style.opacity = '1';
+                }, 500);
+            }
+        }
+        window.onload = runBios;
 
+        // Star Background
+        const canvas = document.getElementById('starCanvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        function initStars() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            stars = [];
+            for(let i=0; i<150; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, s:Math.random()*1.5, op:Math.random(), sp:Math.random()*0.015});
+        }
+        function animateStars() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            stars.forEach(s => { s.op += s.sp; if(s.op > 1 || s.op < 0) s.sp *= -1; ctx.fillStyle = `rgba(214, 47, 127, ${s.op})`; ctx.fillRect(s.x, s.y, s.s, s.s); });
+            requestAnimationFrame(animateStars);
+        }
+        initStars(); animateStars();
+
+        // Cursor & Clock
+        const cursor = document.getElementById('custom-cursor');
+        window.addEventListener('mousemove', e => { cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px'; });
+        setInterval(() => { document.getElementById('live-clock').innerText = new Date().toLocaleTimeString(); }, 1000);
+    </script>
+</body>
+</html>
